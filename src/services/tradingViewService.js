@@ -166,8 +166,30 @@ class TradingViewService {
           'User-Agent': userAgent,
           'referer': 'https://www.tradingview.com'
         },
-        timeout: 15000
+        timeout: 15000,
+        maxRedirects: 5,
+        validateStatus: function (status) {
+          return status >= 200 && status < 500; // Accept any status to see what happens
+        }
       });
+
+      // Check for CAPTCHA or login errors
+      if (response.data && typeof response.data === 'object') {
+        if (response.data.error || response.data.code === 'recaptcha_required') {
+          authLogger.error({ 
+            error: response.data.error, 
+            code: response.data.code 
+          }, 'Login failed - CAPTCHA or error detected');
+          throw new Error(`Login failed: ${response.data.error || 'CAPTCHA required'}`);
+        }
+      }
+
+      authLogger.info({ 
+        status: response.status,
+        hasSetCookie: !!response.headers['set-cookie'],
+        dataType: typeof response.data,
+        dataLength: JSON.stringify(response.data).length
+      }, 'Login response received');
 
       // Extract session ID from cookies
       const cookies = response.headers['set-cookie'];

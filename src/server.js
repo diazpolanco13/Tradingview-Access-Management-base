@@ -21,6 +21,9 @@ const configRoutes = require('./routes/config');
 // Initialize Express app
 const app = express();
 
+// Trust proxy for Railway deployment
+app.set('trust proxy', true);
+
 // Security middleware
 app.use(helmet({
   contentSecurityPolicy: false, // Disable CSP for API
